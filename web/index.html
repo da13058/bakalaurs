@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Bakalaura darbs - Lietotāja vadīts reljefa ģenerēšanas algoritms">
+  <meta name="author" content="Dmitrijs Arkasarins (da16019)">
+
+  <title>User-controlled terrain generation algorithm</title>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <div id="content-wrapper" class="d-flex flex-column">
+
+      <div id="content">
+        <div class="container-fluid">
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+			<div class="my-2"><h1 class="h3 mb-0 text-gray-800">User-contolled terrain generation algorithm</h1></div>
+          </div>          
+
+          <div class="row">
+		  
+            <div class="col-xl-6 col-lg-5">
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Heightmap 513x513</h6>
+                </div>
+                <div class="card-body mx-auto" style="height: 550px;">
+                    <canvas id="mycanvas"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xl-4 col-lg-5">
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Edit</h6>
+                </div>
+                <div class="card-body"> 
+				  <div class="panel-group" id="accordion">
+					  <div class="panel panel-default">
+						<div class="panel-heading">
+						  <h4 class="panel-title">
+							<a data-toggle="collapse" data-parent="#accordion" href="#collapse1">
+							Controls</a>
+						  </h4>
+						</div>
+						<div id="collapse1" class="panel-collapse collapse in">
+						  <div class="panel-body">
+							  <label for="customRange1">A</label>
+							  <input type="range" class="custom-range" min="0" max="500" step="50" value="0" id="customRange1" onChange="applyParams()">
+							  <label for="customRange2">B</label>
+							  <input type="range" class="custom-range" min="0" max="500" step="50" value="0" id="customRange2" onChange="applyParams()">
+							  <label for="customRange3">C</label>
+							  <input type="range" class="custom-range" min="0" max="500" step="50" value="0" id="customRange3" onChange="applyParams()">
+							  <label for="customRange4">D</label>
+							  <input type="range" class="custom-range" min="0" max="500" step="50" value="0" id="customRange4" onChange="applyParams()">
+							  <label for="max-height">Seed</label>
+							  <input type="range" class="custom-range" min="0" max="1500" step="50" value="0" id="max-height" onChange="applyParams()">
+							  <div class="my-2"></div>
+						  </div>
+						</div>
+					  </div>
+					  <div class="panel panel-default">
+						<div class="panel-heading">
+						  <h4 class="panel-title">
+							<a data-toggle="collapse" data-parent="#accordion" href="#collapse2">
+							Rendering</a>
+						  </h4>
+						</div>
+						<div id="collapse2" class="panel-collapse collapse">
+						  <div class="panel-body">
+							<label for="gaussian">Gaussian Blur</label>
+							<input type="range" class="custom-range" min="0" max="10" step="1" value="0" id="gaussian">
+							<div class="my-2"></div>
+							<label for="water">Water Level</label>
+							<input type="range" class="custom-range" min="0" max="255" step="5" value="0" id="water">
+							<div class="my-2"></div>
+							<div class="custom-control custom-checkbox small">
+								<input type="checkbox" class="custom-control-input" id="colourCheck">
+								<label class="custom-control-label" for="colourCheck">Render colouring</label>
+							</div>
+						  <div class="my-2"></div>
+							  <a href="#" class="btn btn-success btn-icon-split" onClick="setRendering()">
+								<span class="icon text-white-50">
+								  <i class="fas fa-check"></i>
+								</span>
+								<span class="text">Apply rendering</span>
+							  </a>
+						  <div class="my-2"></div>
+						  </div>
+						</div>
+					  </div>
+					  <div class="panel panel-default">
+						<div class="panel-heading">
+						  <h4 class="panel-title">
+							<a data-toggle="collapse" data-parent="#accordion" href="#collapse3">
+							Presets</a>
+						  </h4>
+						</div>
+						<div id="collapse3" class="panel-collapse collapse">
+						  <div class="panel-body">
+						  
+							<div class="panel panel-default">
+								<div class="panel-heading">
+								  <h4 class="panel-title">
+									Island
+								  </h4>
+								</div>
+								<div class="panel-body">
+									<label for="island-height">Height</label>
+									<input type="range" class="custom-range" min="100" max="150" step="10" value="100" id="island-height">
+									<div class="my-2"></div>
+									<a href="#" class="btn btn-success btn-icon-split" onClick="drawIsland()">
+										<span class="icon text-white-50">
+										  <i class="fas fa-check"></i>
+										</span>
+										<span class="text">Apply</span>
+									</a>
+								</div>
+							</div>
+							<div class="my-2"></div>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+								  <h4 class="panel-title">
+									Mountain
+								  </h4>
+								</div>
+								<div class="panel-body">
+									<label for="mount-height">Height</label>
+									<input type="range" class="custom-range" min="200" max="400" step="20" value="200" id="mount-height">
+									<div class="my-2"></div>
+									<label for="mount-type">Type</label>
+									<select class="form-control" id="mount-type">
+									  <option value="centered">Centered</option>
+									  <option value="shifted">Shifted</option>
+									  <option value="three">Three Peaks</option>
+									  <option value="multy">Mountains</option>
+									</select>
+									<div class="my-2"></div>
+									<a href="#" class="btn btn-success btn-icon-split" onClick="drawMountain()">
+										<span class="icon text-white-50">
+										  <i class="fas fa-check"></i>
+										</span>
+										<span class="text">Apply</span>
+									</a>
+								</div>
+							</div>
+							<div class="my-2"></div>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+								  <h4 class="panel-title">
+									Plato
+								  </h4>
+								</div>
+								<div class="panel-body">
+									<label for="plato-height">Base Height</label>
+									<input type="range" class="custom-range" min="200" max="400" step="20" value="200" id="plato-height">
+									<div class="my-2"></div>
+									<label for="cut-height">Cut Height</label>
+									<input type="range" class="custom-range" min="100" max="170" step="10" value="100" id="cut-height">
+									<div class="my-2"></div>
+									<a href="#" class="btn btn-success btn-icon-split" onClick="drawPlato()">
+										<span class="icon text-white-50">
+										  <i class="fas fa-check"></i>
+										</span>
+										<span class="text">Apply</span>
+									</a>
+								</div>
+							</div>
+							<div class="my-2"></div>
+							<div class="panel panel-default">
+								<div class="panel-heading">
+								  <h4 class="panel-title">
+									Lake
+								  </h4>
+								</div>
+								<div class="panel-body">
+									<label for="mount-height">Depth</label>
+									<input type="range" class="custom-range" min="-200" max="0" step="50" value="-200" id="lake-depth">
+									<div class="my-2"></div>
+									<a href="#" class="btn btn-success btn-icon-split" onClick="drawLake()">
+										<span class="icon text-white-50">
+										  <i class="fas fa-check"></i>
+										</span>
+										<span class="text">Apply</span>
+									</a>
+								</div>
+							</div>
+							<div class="my-2"></div>
+							  <a href="#" class="btn btn-success btn-icon-split" onClick="disablePresets()">
+								<span class="icon text-white-50">
+								  <i class="fas fa-check"></i>
+								</span>
+								<span class="text">Drop presets</span>
+							  </a>
+							<div class="my-2"></div>
+						  </div>
+						</div>
+					  </div>
+					</div>
+				  <a href="#" class="btn btn-primary btn-icon-split" onClick="saveImage()">
+					<span class="icon text-white-50">
+					  <i class="fas fa-download"></i>
+					</span>
+					<span class="text">Save</span>
+				  </a>
+                </div>
+              </div>
+            </div>
+        </div>
+      </div>
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>Dmitrijs Arkašarins, Rīga 2020</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Lietotāja saskarnes funkcionāls -->
+  <script>
+	function applyParams() {
+		Processing.instances[0].setBaseHeight($( "#customRange1" ).val(), 1)
+		Processing.instances[0].setBaseHeight($( "#customRange2" ).val(), 2)
+		Processing.instances[0].setBaseHeight($( "#customRange3" ).val(), 3)
+		Processing.instances[0].setBaseHeight($( "#customRange4" ).val(), 4)
+		Processing.instances[0].setRangeMax($( "#max-height" ).val())
+		Processing.instances[0].redraw()
+	}
+	function disablePresets() {
+		Processing.instances[0].disablePresets()
+		Processing.instances[0].redraw()
+	}
+	function drawIsland() {
+		Processing.instances[0].setAllBaseHeights(-150)
+		Processing.instances[0].setRangeMax(70)
+		Processing.instances[0].setPeak($( "#island-height" ).val(), 1)
+		Processing.instances[0].setRangeMin(0)
+		Processing.instances[0].redraw()
+	}
+	function drawMountain() {
+		Processing.instances[0].setAllBaseHeights(-400)
+		Processing.instances[0].setRangeMax(200)
+		Processing.instances[0].setRangeMin(0)
+		switch($( "#mount-type" ).val()) {
+			case "centered":
+				Processing.instances[0].setPeak($( "#mount-height" ).val(), 1)
+				break
+			case "three":
+				Processing.instances[0].setPeak($( "#mount-height" ).val(), 2)
+				break
+			case "shifted":
+				Processing.instances[0].setPeak($( "#mount-height" ).val(), 3)
+				break
+			case "multy":
+				Processing.instances[0].setPeak($( "#mount-height" ).val(), 4)
+		}
+		Processing.instances[0].redraw()
+	}
+	function drawPlato() {
+		Processing.instances[0].setAllBaseHeights(-400)
+		Processing.instances[0].setRangeMax(100)
+		Processing.instances[0].setPeak($( "#plato-height" ).val(), 1)
+		Processing.instances[0].setPlato($( "#cut-height" ).val())
+		Processing.instances[0].setRangeMin(0)
+		Processing.instances[0].redraw()
+	}
+	function drawLake() {
+		Processing.instances[0].setAllBaseHeights(200)
+		Processing.instances[0].setRangeMax(200)
+		Processing.instances[0].setLake($( "#lake-depth" ).val())
+		Processing.instances[0].setRangeMin(0)
+		Processing.instances[0].redraw()
+	}
+	
+	function setRendering() {
+		Processing.instances[0].setBlur($( "#gaussian" ).val())
+		Processing.instances[0].setWaterLevel($( "#water" ).val())
+		if ($('#colourCheck').is(":checked")) {
+			Processing.instances[0].setRender(true)
+		} else {
+			Processing.instances[0].setRender(false)
+		}
+		Processing.instances[0].redraw()
+	}
+	
+	function saveImage() {
+		var canvas = $('canvas')[0];
+		var file = document.createElement("a"); 
+		file.href = canvas.toDataURL('image/png');
+		file.download = "heightmap.png";
+		file.click(); 
+	}
+  </script>  
+  
+  <!-- Processing JS skripts reljefa ģenerēšanai -->
+  <script type="text/processing" data-processing-target="mycanvas">
+	private static final boolean PARAM_RENDER = false;
+	private static final boolean CENTERED = false;
+	private static final boolean THREE_PEAK = false;
+	private static final boolean SHIFT_PEAK = false;
+	private static final boolean MULTY_PEAK = false;
+	private static final boolean LAKE = false;
+	private static final boolean PLATO = false;
+	private static final boolean MARGIN = false;
+	private static final int BLUR_RATE = 0;
+	private static final int HEIGHT_A = 0;
+	private static final int HEIGHT_B = 0;
+	private static final int HEIGHT_C = 0;
+	private static final int HEIGHT_D = 0;
+	private static final float PARAM_RANGE_MAX = 200;
+	private static final float HIGH_POINT = 400;
+	private static final float PARAM_RANGE_MIN = 0;
+	private static final float WATER_LVL = 0;
+	private static final float MARGIN_HEIGHT = 0;
+	private static final float PLATO_HEIGHT = 0;
+	private static final int H_VALUE = 0;
+	private static final int W_VALUE = 0;
+	private float[][] heightmap;
+	private color[]colorScheme;
+	
+	void setWaterLevel(int level) {
+		WATER_LVL = level;
+	}
+	
+	void setRender(boolean render) {
+		PARAM_RENDER = render;
+	}
+	
+	void setBlur(int radius) {
+		BLUR_RATE = radius;
+	}
+
+	void disablePresets() {
+		CENTERED = false;
+		LAKE = false;
+		PLATO = false;
+		MARGIN = false;
+		THREE_PEAK = false;
+		SHIFT_PEAK = false;
+		MULTY_PEAK = false;
+	}
+
+	void setPeak(int x, int type) {
+		PLATO = false;
+		switch (type) {
+			case 1:
+				CENTERED = true;	
+				THREE_PEAK = false;
+				SHIFT_PEAK = false;
+				MULTY_PEAK = false;
+				break;
+			case 2:
+				CENTERED = false;	
+				THREE_PEAK = true;
+				SHIFT_PEAK = false;
+				MULTY_PEAK = false;
+				break;
+			case 3:
+				CENTERED = false;	
+				THREE_PEAK = false;
+				SHIFT_PEAK = true;
+				MULTY_PEAK = false;
+				break;
+			case 4:
+				CENTERED = false;	
+				THREE_PEAK = false;
+				SHIFT_PEAK = false;
+				MULTY_PEAK = true;
+				break;
+		}
+		HIGH_POINT = x;
+	}
+
+	void setLake(int x) {
+		LAKE = true;
+		CENTERED = true;
+		HIGH_POINT = x;
+	}
+
+	void setPlato(int x) {
+		PLATO = true;
+		PLATO_HEIGHT = x;
+	}
+
+	void setRangeMax(int x) {
+		PARAM_RANGE_MAX = x;
+	}
+
+	void setRangeMin(int x) {
+		PARAM_RANGE_MIN = x;
+	}
+
+	void setHighestPoint(int x) {
+		HIGHEST_POINT = x;
+	}
+
+	void setBaseHeight(int x, int a) {
+		switch (a) {
+			case 1:
+				HEIGHT_A = x;	
+				break;
+			case 2:
+				HEIGHT_B = x;
+				break;
+			case 3:
+				HEIGHT_C = x;
+				break;
+			case 4:
+				HEIGHT_D = x;
+				break;
+		}
+	}
+
+	void setAllBaseHeights(int x) {
+		HEIGHT_A = x;	
+		HEIGHT_B = x;
+		HEIGHT_C = x;
+		HEIGHT_D = x;
+	}
+
+	void setWaterLevel(int x) {
+		WATER_LVL = x
+	}
+
+	void setup(){
+	   size(513,513);
+	   H_VALUE = height;
+	   W_VALUE = width;
+	   heightmap = new float[width][height];
+	   colorScheme = new color[18]; 
+	   noLoop();
+	   background(255);
+	   setColorScheme();
+	}
+
+	void draw(){
+	   float maxRange = PARAM_RANGE_MAX;
+	   int stepSize = width - 1;
+	   int initialStepsize = width - 1;
+	   setHeightl(0,0, HEIGHT_A);
+	   setHeightl(width-1, 0, HEIGHT_B);
+	   setHeightl(0, height-1, HEIGHT_C);
+	   setHeightl(width-1, height-1, HEIGHT_D);
+	   //lidz  1px izmeram
+	   while(stepSize > 1){
+		 //romba solis
+		 for(int x = 0; x < width - 1; x += stepSize){
+		   for(int y = 0; y < height - 1; y += stepSize){
+			 int sx = x + (stepSize/2);
+			 int sy = y + (stepSize/2);
+			 int[][] points = {
+						 {x, y},
+						 {x+stepSize, y},
+						 {x, y+stepSize},
+						 {x+stepSize, y+stepSize},
+					   };
+			   if (CENTERED && (sx == initialStepsize/2 && sy == initialStepsize/2)) {
+		  setColoring(sx, sy, points, maxRange, true, false);
+		  } else if (THREE_PEAK && (sx == initialStepsize/4 || sy == initialStepsize/2)) {
+		  setColoring(sx, sy, points, maxRange, true, false);
+		  } else if (SHIFT_PEAK && (sx == initialStepsize/4 && sy == initialStepsize/4)) {
+		  setColoring(sx, sy, points, maxRange, true, false);
+		  } else if (MULTY_PEAK && (sx == initialStepsize/4 || sy == initialStepsize/8)) {
+		  setColoring(sx, sy, points, maxRange, true, false);
+		  } else if (LAKE && ((sy == initialStepsize/2 && sx == initialStepsize) || (sx == initialStepsize/2 && sy == initialStepsize) || (sy == initialStepsize/2 && sx == 0) || (sx == initialStepsize/2 && sy == 0))) {
+			 setColoring(sx, sy, points, maxRange, false, true);
+		  } else {
+			  setColoring(sx, sy, points, maxRange,false, false);
+		  }
+		   }
+		 }
+		 
+		 //kvadrata solis
+		 for(int x = 0; x < width - 1; x += stepSize){
+		   for(int y = 0; y < height - 1; y += stepSize){
+			 int halfstep = stepSize / 2;
+			 int x1 = x + halfstep;
+			 int y1 = y;
+			 int x2 = x;
+			 int y2 = y + halfstep;
+			 int[][] points1 = {
+							   {x1 - halfstep, y1},
+							   {x1, y1 - halfstep},
+							   {x1 + halfstep, y1},
+							   {x1, y1 + halfstep}
+							  };
+			 int[][] points2 = {
+							   {x2 - halfstep, y2},
+							   {x2, y2 - halfstep},
+							   {x2 + halfstep, y2},
+							   {x2, y2 + halfstep}
+							  };
+			setColoring(x1, y1, points1, maxRange, false, false);
+			setColoring(x2, y2, points2, maxRange, false, false);
+		   }
+		 }
+		 maxRange = maxRange / 2;
+		 stepSize = stepSize / 2;
+	 }
+	 if (PARAM_RENDER) {
+	   drawTerrain();
+	 }
+	 else {
+	   drawHeightmap();
+	 }
+	}
+
+	void setColoring(int x, int y, int[][] points, float maxRange, boolean island, boolean setMid){
+			 float c = 0;
+			 for(int i = 0; i < 4; i++){
+				 if(points[i][0] < 0){
+				   points[i][0] += (width - 1);
+				 }else if(points[i][0] > width){
+				   points[i][0] -= (width - 1);
+				 }else if(points[i][1] < 0){
+				   points[i][1] += height - 1;
+				 }else if(points[i][1] > height){
+				   points[i][1] -= height - 1;
+				 }
+				 c += heightmap[points[i][0]][points[i][1]] / 4.0;
+			 }
+			 c +=  (random(maxRange) - maxRange / 2);
+			 if (c < PARAM_RANGE_MIN){
+				 c = PARAM_RANGE_MIN;
+			 } else if ( c > 255){
+				 c = 255;
+			 }
+			 if (island) {
+			   c = HIGH_POINT;
+			 }
+			 if (setMid) {
+			   c = HEIGHT;
+			 }
+			 if (MARGIN && c > float(MARGIN_HEIGHT)) {
+			   c = float(MARGIN_HEIGHT);
+			 }
+			 setHeightl(x, y, c);
+			 if (x == 0) {
+			   setHeightl(width - 1, y, c);
+			 }else if(x == width - 1){
+			   setHeightl(0,y,c);
+			 }else if(y == 0){
+			   setHeightl(x, height - 1, c);
+			 }else if(y == height - 1){
+			   setHeightl(x, 0, c);
+			 }
+	 }
+
+	void setHeightl(int x, int y, float c){
+		   heightmap[x][y] = c;
+	}
+
+	void drawHeightmap() {
+	  for(int i = 0; i < width; i++){
+	   for(int j = 0; j < width; j++){
+		 float h = heightmap[i][j];
+		 if (PLATO){
+		   if (h > float(PLATO_HEIGHT)) {
+			 h = float(PLATO_HEIGHT) + float(random(3));
+		   }
+		 }
+		 set(i, j, color(h));
+	   }
+	 }
+	
+	loadPixels();
+	PImage c = get( 0,0, W_VALUE, H_VALUE );
+	c.filter(BLUR, BLUR_RATE);
+	image(c,0,0); 
+	}
+	
+	void drawTerrain(){
+	  for(int i = 0; i < width; i++){
+		for(int j = 0; j < width; j++){
+			colorizeTerrain(i,j,heightmap[i][j]);
+		}
+	  }
+	 loadPixels();
+	 PImage c = get( 0,0, W_VALUE, H_VALUE );
+	 c.filter(BLUR, BLUR_RATE);
+	 image(c,0,0); 
+	}
+
+	void colorizeTerrain(int x, int y, float pxval){
+	  if (WATER_LVL > 0 & WATER_LVL >= pxval) {
+		 set(x, y, colorScheme[19]);
+		 return;
+	  }
+	  if (pxval <= 15) {
+		  set(x, y, colorScheme[0]);
+	  } else if (pxval <= 30) {
+		  set(x, y, colorScheme[1]);
+	  } else if (pxval <= 45){
+		  set(x, y, colorScheme[2]);
+	  } else if (pxval <= 60){
+		  set(x, y, colorScheme[3]);
+	  } else if (pxval <= 75){
+		  set(x, y, colorScheme[4]);
+	  } else if (pxval <= 90){
+		  set(x, y, colorScheme[5]);
+	  } else if (pxval <= 105){
+		  set(x, y, colorScheme[6]);
+	  } else if (pxval <= 120){
+		  set(x, y, colorScheme[7]);
+	  } else if (pxval <= 135){
+		  set(x, y, colorScheme[8]);
+	  } else if (pxval <= 150){
+		  set(x, y, colorScheme[9]);
+	  } else if (pxval <= 165){
+		  set(x, y, colorScheme[10]);
+	  } else if (pxval <= 180){
+		  set(x, y, colorScheme[11]);
+	  } else if (pxval <= 195){
+		  set(x, y, colorScheme[12]);
+	  } else if (pxval <= 210){
+		  set(x, y, colorScheme[13]);
+	  } else if (pxval <= 220){
+		  set(x, y, colorScheme[14]);
+	  } else if (pxval <= 230){
+		  set(x, y, colorScheme[15]);
+	  } else if (pxval <= 240){
+		  set(x, y, colorScheme[16]);
+	  } else if (pxval <= 245){
+		  set(x, y, colorScheme[17]);
+	  } else {
+		  set(x, y, colorScheme[18]);
+	  }
+	}
+
+	void setColorScheme(){
+		colorScheme[0] = color(255,255,142);
+		colorScheme[1] = color(255,255,102);
+		colorScheme[2] = color(221,249,105);
+		colorScheme[3] = color(204,255,153);
+		colorScheme[4] = color(178,255,102);
+		colorScheme[5] = color(153,255,51);
+		colorScheme[6] = color(51,255,51);
+		colorScheme[7] = color(51,204,51);
+		colorScheme[8] = color(0,204,0);
+		colorScheme[9] = color(0,153,0);
+		colorScheme[10] = color(0,102,0);
+		colorScheme[11] = color(51,77,0);
+		colorScheme[12] = color(32,32,32);
+		colorScheme[13] = color(64,64,64);
+		colorScheme[14] = color(160,160,160);
+		colorScheme[15] = color(192,192,192);
+		colorScheme[16] = color(204,204,204);
+		colorScheme[17] = color(224,224,224);
+		colorScheme[18] = color(255,255,255);
+		colorScheme[19] = color(102,178,255);
+	}
+  
+  </script>
+  
+  <script src="js/processing.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+  <script src="js/sb-admin-2.min.js"></script>
+
+</body>
+
+</html>
